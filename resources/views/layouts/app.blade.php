@@ -26,14 +26,16 @@
     <div class="layout-container flex flex-col grow">
         @include('partials.header')
 
-        <main class="px-40 py-5 flex flex-1 justify-center">
+        <main class="px-10 py-5 flex flex-1 justify-center">
             <div class="layout-content-container flex flex-col max-w-[960px] w-full">
                 @yield('content')
             </div>
         </main>
+        <footer class="flex justify-center">
+            @include('partials.footer')
+        </footer>
     </div>
 </div>
-
 @stack('scripts')
 </body>
 </html>
