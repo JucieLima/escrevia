@@ -3,6 +3,10 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use App\Models\User;
+use App\Models\Essay;
+use App\Models\CompetencyFeedback;
+use App\Models\Intervention;
 
 class DatabaseSeeder extends Seeder
 {
@@ -13,6 +17,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // \App\Models\User::factory(10)->create();
+        User::factory(10)
+            ->has(
+                Essay::factory(3)
+                    ->has(CompetencyFeedback::factory(5))
+                    ->has(Intervention::factory(2))
+            )
+            ->create();
     }
 }
