@@ -29,3 +29,14 @@ Route::get('/feedback', function () {
     return view('essay-feedback');
 })->name('feedback');
 
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth'])->name('dashboard');
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin', function () {
+        return 'Painel do administrador';
+    });
+});
+
+require __DIR__.'/auth.php';
