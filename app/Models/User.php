@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -21,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role', // Added 'role' to fillable
     ];
 
     /**
@@ -40,5 +42,23 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'password' => 'hashed',
     ];
+
+    /**
+     * Get the essays for the user.
+     */
+    public function essays(): HasMany
+    {
+        return $this->hasMany(Essay::class);
+    }
+
+    /**
+     * Get the interventions for the user.
+     */
+    public function interventions(): HasMany
+    {
+        return $this->hasMany(Intervention::class);
+    }
 }
+
