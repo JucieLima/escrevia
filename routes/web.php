@@ -16,22 +16,27 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
-Route::get('/historico', function () {
-    return view('history');
-})->name('history');
-Route::get('/enviar-redacao', function () {
-    return view('submit-essay');
-})->name('submit-essay');
-Route::get('/configuracoes', function () {
-    return view('settings');
-})->name('settings');
-Route::get('/feedback', function () {
-    return view('essay-feedback');
-})->name('feedback');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth'])->name('dashboard');
+    Route::get('/historico', function () {
+        return view('history');
+    })->name('history');
+
+    Route::get('/enviar-redacao', function () {
+        return view('submit-essay');
+    })->name('submit-essay');
+
+    Route::get('/configuracoes', function () {
+        return view('settings');
+    })->name('settings');
+
+    Route::get('/feedback', function () {
+        return view('essay-feedback');
+    })->name('feedback');
+});
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin', function () {

@@ -1,4 +1,9 @@
 {
     "/js/app.js": "/js/app.js",
-    "/css/app.css": "/css/app.css"
+    "/css/escrevia_theme.css": "/css/escrevia_theme.css",
+    "/css/app.css": "/css/app.css",
+    "/images/bg_students.jpg": "/images/bg_students.jpg",
+    "/images/escrevia.png": "/images/escrevia.png",
+    "/images/escrevia_social_share.png": "/images/escrevia_social_share.png",
+    "/images/favicon.ico": "/images/favicon.ico"
 }

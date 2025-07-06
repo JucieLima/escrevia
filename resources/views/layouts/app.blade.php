@@ -36,9 +36,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Stitch Design')</title>
+    <title>@yield('title', 'Escrevia - Dashboard')</title>
 
-    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,"/>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin>
