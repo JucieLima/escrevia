@@ -1,4 +1,7 @@
 {
     "/js/app.js": "/js/app.js",
-    "/css/app.css": "/css/app.css"
+    "/js/escrevia_dashboard.js": "/js/escrevia_dashboard.js",
+    "/css/escrevia_theme.css": "/css/escrevia_theme.css",
+    "/css/app.css": "/css/app.css",
+    "/images/escrevia.png": "/images/escrevia.png"
 }

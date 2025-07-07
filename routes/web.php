@@ -16,9 +16,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
-Route::get('/historico', function () {
-    return view('history');
-})->name('history');
+
 Route::get('/enviar-redacao', function () {
     return view('submit-essay');
 })->name('submit-essay');
@@ -32,6 +30,12 @@ Route::get('/feedback', function () {
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth'])->name('dashboard');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/historico', function () {
+        return view('history');
+    })->name('history');
+});
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin', function () {

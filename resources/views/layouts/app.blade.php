@@ -69,6 +69,8 @@
         </footer>
     </div>
 </div>
+<script src="{{ mix('js/app.js') }}" defer></script>
+<script src="{{ mix('js/escrevia_dashboard.js') }}" defer></script>
 @stack('scripts')
 </body>
 </html>
