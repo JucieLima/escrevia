@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Dashboard\EssayController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,9 +33,7 @@ Route::get('/dashboard', function () {
 })->middleware(['auth'])->name('dashboard');
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/historico', function () {
-        return view('history');
-    })->name('history');
+    Route::get('/historico', [EssayController::class, 'index'])->name('history');
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
