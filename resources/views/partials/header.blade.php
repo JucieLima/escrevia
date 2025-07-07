@@ -16,6 +16,10 @@
                 <path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06Z"/>
             </svg>
         </button>
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit">Logout</button>
+        </form>
         <div class="bg-center bg-no-repeat bg-cover rounded-full size-10"
              style='background-image: url("https://lh3.googleusercontent.com/a/ACg8ocKBTne3QKowPSYQjw-FJwZd2YeZc5gkfTLDJ8hdsZjZQh7VBaDJQg=s360-c-no");'>
         </div>
