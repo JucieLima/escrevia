@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Dashboard\EssayController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,16 +17,23 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
 
-    Route::get('/historico', function () {
-        return view('history');
-    })->name('history');
-
     Route::get('/enviar-redacao', function () {
+        return view('submit-essay');
+    })->name('submit-essay');
+    Route::get('/configuracoes', function () {
+        return view('settings');
+    })->name('settings');
+    Route::get('/redacoes/{essay}/feedback', [EssayController::class, 'showFeedback'])->name('essay-feedback');
+
+    Route::get('/redacoes/historico', [EssayController::class, 'index'])->name('history');
+
+    Route::get('/redacoes/enviar-redacao', function () {
         return view('submit-essay');
     })->name('submit-essay');
 
@@ -33,7 +41,7 @@ Route::middleware(['auth'])->group(function () {
         return view('settings');
     })->name('settings');
 
-    Route::get('/feedback', function () {
+    Route::get('/redacoes/feedback', function () {
         return view('essay-feedback');
     })->name('feedback');
 });
@@ -44,4 +52,5 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
+gi

@@ -57,7 +57,7 @@
 <body style='font-family: Inter, "Noto Sans", sans-serif;'>
 <div class="relative flex min-h-screen flex-col bg-white overflow-x-hidden">
     <div class="layout-container flex flex-col grow">
-        @include('partials.header')
+        @include('partials.escrevia-header')
 
         <main class="px-10 py-5 flex flex-1 justify-center">
             <div class="layout-content-container flex flex-col max-w-[960px] w-full">
@@ -69,6 +69,8 @@
         </footer>
     </div>
 </div>
+<script src="{{ mix('js/app.js') }}" defer></script>
+<script src="{{ mix('js/escrevia_dashboard.js') }}" defer></script>
 @stack('scripts')
 </body>
 </html>

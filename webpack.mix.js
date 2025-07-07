@@ -12,9 +12,11 @@ const mix = require('laravel-mix');
  */
 
 mix.js('resources/js/app.js', 'public/js')
+    .js('resources/js/escrevia_dashboard.js', 'public/js') // Adicione esta linha
     .postCss('resources/css/app.css', 'public/css', [
         require('tailwindcss'),
         require('autoprefixer'),
-    ]).css('resources/css/escrevia_theme.css', 'public/css');
+    ])
+    .css('resources/css/escrevia_theme.css', 'public/css');
 
 mix.copyDirectory('resources/images', 'public/images');
