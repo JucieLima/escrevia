@@ -24,9 +24,7 @@ Route::get('/enviar-redacao', function () {
 Route::get('/configuracoes', function () {
     return view('settings');
 })->name('settings');
-Route::get('/feedback', function () {
-    return view('essay-feedback');
-})->name('feedback');
+Route::get('/redacoes/{essay}/feedback', [EssayController::class, 'showFeedback'])->name('essay-feedback');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
