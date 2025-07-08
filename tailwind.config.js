@@ -9,15 +9,28 @@ module.exports = {
     ],
     theme: {
         extend: {
+            fontFamily: {
+                handwritten: ['"Patrick Hand"', ...defaultTheme.fontFamily.sans],
+            },
             colors: {
                 escreviaPrimary: '#E94E77',    // Rosa vibrante
-                escreviaSecondary: '#1D2C54',  // Azul marinho
+                escreviaSecondary: '#051440',  // Azul marinho
                 escreviaAccent: '#F27121',     // Laranja
                 escreviaBgLight: '#FEF6F8',    // Rosa muito claro
                 escreviaBorder: '#F3E5EA',     // Rosa dessaturado para bordas
-                escreviaWhite: '#ffffff',       // Se você usou bg-white no guest.blade.php e não tem uma var, pode não precisar desta
+                escreviaWhite: '#ffffff',       // Branco
+                escreviaFeedback: '#485f9b',  // Azul
+
+                // NOVAS CORES CLARAS PARA BACKGROUNDS
+                'escreviaPrimary-light': '#FCDADE', // Tom muito claro do escreviaPrimary
+                'escreviaAccent-light': '#FEE8D8',  // Tom muito claro do escreviaAccent
+                'escreviaSecondary-light': '#d8ddff', // Tom muito claro do escreviaSecondary
+                'green-light': '#D9F7DB',          // Tom muito claro para o verde
             },
         },
     },
-    plugins: [require('@tailwindcss/forms')],
+    plugins: [
+        require('@tailwindcss/forms'),
+        require('@tailwindcss/typography'),
+    ],
 };

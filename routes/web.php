@@ -37,6 +37,8 @@ Route::middleware(['auth'])->group(function () {
         return view('submit-essay');
     })->name('submit-essay');
 
+    Route::post('/essays', [EssayController::class, 'store'])->name('essay.store');
+
     Route::get('/configuracoes', function () {
         return view('settings');
     })->name('settings');
@@ -53,4 +55,3 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 });
 
 require __DIR__ . '/auth.php';
-gi
