@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class EssayController extends Controller
 {
@@ -90,7 +91,7 @@ class EssayController extends Controller
             'title' => $title,
             'content' => $content,
             'status' => 'pending_evaluation',
-            ],
+        ],
             // Mensagens personalizadas (se precisar de algo muito específico para a regra)
             [
                 'content.required' => 'Por favor, digite sua redação.',
@@ -102,8 +103,17 @@ class EssayController extends Controller
             ]
         );
 
+        // Chama a função para analisar a redação imediatamente após o salvamento
+        $analysisResult = $this->analyzeEssayWithIA($essay);
+
+        if (!$analysisResult) {
+            // Se houver um erro na análise da IA, podemos adicionar uma mensagem ou logar
+            // Por enquanto, vamos apenas redirecionar com uma mensagem de erro genérica
+            return redirect()->route('history')->with('error', 'Redação enviada, mas houve um problema ao processá-la pela IA. Tente novamente mais tarde ou contate o suporte.');
+        }
+
         // 4. Redirecionar com mensagem de sucesso
-        return redirect()->route('history')->with('success', 'Redação enviada com sucesso!');
+        return redirect()->route('history')->with('success', 'Redação enviada e encaminhada para análise!');
     }
 
     public function create()
@@ -111,58 +121,162 @@ class EssayController extends Controller
         return view('submit-essay');
     }
 
-    public function analyzeEssay(Essay $essay)
+    /**
+     * Envia a redação para análise de IA e atualiza o modelo Essay.
+     * @param Essay $essay
+     * @return bool Retorna true se a análise for bem-sucedida, false caso contrário.
+     */
+    protected function analyzeEssayWithIA(Essay $essay): bool
     {
         $apiKey = env('IA_API_KEY');
         if (!$apiKey) {
-            // Tratar erro: chave de API não configurada
-            return back()->with('error', 'Chave de API da IA não configurada.');
+            Log::error('IA_API_KEY não configurada no ambiente. Não é possível analisar a redação.');
+            return false;
         }
 
-        try {
-            // Preparar o prompt para a IA
-            // Este é o "pedido" que você faz à IA.
-            $prompt = "Analise a seguinte redação e forneça feedback construtivo, uma pontuação geral (0-1000) e sugestões de melhoria em termos de estrutura, coesão, coerência, gramática e vocabulário. Redação: \n\n\"" . $essay->content . "\"";
+        // Mapeamento dos nomes curtos para os nomes completos das competências
+        $competencyNamesMap = [
+            'C1' => 'Domínio da norma culta',
+            'C2' => 'Compreensão do tema',
+            'C3' => 'Argumentação',
+            'C4' => 'Coesão',
+            'C5' => 'Proposta de intervenção',
+        ];
 
-            // Enviar requisição para a API da IA (exemplo com OpenAI)
+        try {
+            // O prompt atualizado com as tags
+            $prompt = "Você é um professor especialista em correção de redações do ENEM, com amplo conhecimento nas competências avaliadas pelo INEP. Sua tarefa é analisar a redação abaixo, atribuir notas de 0 a 200 para cada uma das 5 competências e fornecer um feedback detalhado, apontando pontos fortes, áreas de melhoria e sugestões claras para evolução.
+
+            C1: Domínio da escrita formal da Língua Portuguesa.
+            C2: Compreensão da proposta de redação
+            C3: Organização das ideias e defesa do ponto de vista
+            C4: Conhecimento dos mecanismos linguísticos para a construção da argumentação
+            C5: Apresentação de proposta de intervenção
+
+            **Instruções de Formatação da Resposta:**
+            Siga exatamente este formato para a sua resposta. Use as tags delimitadoras para cada seção.
+
+            <NOTAS_COMPETENCIAS>
+            C1: [nota_numerica] - [Justificativa breve da C1]
+            C2: [nota_numerica] - [Justificativa breve da C2]
+            C3: [nota_numerica] - [Justificativa breve da C3]
+            C4: [nota_numerica] - [Justificativa breve da C4]
+            C5: [nota_numerica] - [Justificativa breve da C5]
+            </NOTAS_COMPETENCIAS>
+
+            <PONTUACAO_TOTAL>
+            Pontuação Total: [soma_das_notas]
+            </PONTUACAO_TOTAL>
+
+            <FEEDBACK_DETALHADO>
+            **Pontos Fortes:**
+            - [Ponto forte 1]
+            - [Ponto forte 2]
+            ...
+
+            **Áreas de Melhoria e Erros Recorrentes:**
+            - [Erro 1 e área de melhoria]
+            - [Erro 2 e área de melhoria]
+            ...
+
+            **Sugestões Práticas para Evolução:**
+            - [Sugestão 1]
+            - [Sugestão 2]
+            ...
+            </FEEDBACK_DETALHADO>
+
+            **Redação para análise:**
+            \"" . $essay->content . "\"";
+
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
-            ])->post('https://api.openai.com/v1/chat/completions', [
-                'model' => 'gpt-3.5-turbo', // Ou 'gpt-4', 'gemini-pro', etc.
+            ])->timeout(90)->post('https://api.openai.com/v1/chat/completions', [
+                'model' => 'gpt-3.5-turbo',
                 'messages' => [
                     ['role' => 'user', 'content' => $prompt]
                 ],
-                'max_tokens' => 500, // Limite de tokens na resposta da IA
-                'temperature' => 0.7, // Criatividade da resposta (0.0 a 1.0)
+                'max_tokens' => 1500,
+                'temperature' => 0.7,
             ]);
 
-            // Verificar se a requisição foi bem-sucedida
             if ($response->successful()) {
                 $iaResponse = $response->json();
-                $analysisText = $iaResponse['choices'][0]['message']['content'] ?? 'Análise indisponível.';
+                $analysisText = $iaResponse['choices'][0]['message']['content'] ?? '';
 
-                // Aqui você processaria a resposta da IA e salvaria no banco de dados.
-                // Por exemplo, você pode querer salvar a análise completa, a pontuação, etc.
-                $essay->ia_feedback = $analysisText;
-                // Ex: Extrair pontuação usando regex ou outra lógica
-                // $essay->overall_score = $this->extractScore($analysisText);
-                $essay->status = 'evaluated';
+                if (empty($analysisText)) {
+                    Log::warning('Resposta vazia da API da OpenAI para a redação ID: ' . $essay->id);
+                    return false;
+                }
+
+                // --- Parsing da Resposta da IA ---
+
+                // 1. Extrair Pontuação Total
+                $overallScore = null;
+                if (preg_match('/<PONTUACAO_TOTAL>\s*Pontuação Total:\s*(\d+)\s*<\/PONTUACAO_TOTAL>/s', $analysisText, $matches)) {
+                    $overallScore = (int) $matches[1];
+                } else {
+                    Log::warning('Não foi possível extrair a Pontuação Total da resposta da IA para a redação ID: ' . $essay->id);
+                }
+
+                // 2. Extrair Notas das Competências e Justificativas
+                $notesSection = null;
+                if (preg_match('/<NOTAS_COMPETENCIAS>(.*?)<\/NOTAS_COMPETENCIAS>/s', $analysisText, $matches)) {
+                    $notesSection = trim($matches[1]);
+                } else {
+                    Log::warning('Não foi possível extrair a seção NOTAS_COMPETENCIAS da resposta da IA para a redação ID: ' . $essay->id);
+                }
+
+                if ($notesSection) {
+                    // Limpa feedbacks de competências anteriores se houver (útil em retries)
+                    $essay->competencyFeedbacks()->delete();
+
+                    preg_match_all('/(C\d+):\s*(\d+)\s*-\s*(.*)/m', $notesSection, $matches, PREG_SET_ORDER);
+                    foreach ($matches as $match) {
+                        $competencyShortName = trim($match[1]); // Ex: "C1"
+                        $score = (int) $match[2];
+                        $feedbackText = trim($match[3]);
+
+                        // Mapeia o nome curto para o nome completo
+                        $competencyFullName = $competencyNamesMap[$competencyShortName] ?? $competencyShortName;
+
+                        // Cria um novo registro CompetencyFeedback
+                        $essay->competencyFeedbacks()->create([
+                            'competency_name' => $competencyFullName, // Usando o nome completo
+                            'score' => $score,
+                            'feedback_text' => $feedbackText,
+                        ]);
+                    }
+                }
+
+                // 3. Extrair Feedback Detalhado
+                $detailedFeedback = null;
+                if (preg_match('/<FEEDBACK_DETALHADO>(.*?)<\/FEEDBACK_DETALHADO>/s', $analysisText, $matches)) {
+                    $detailedFeedback = trim($matches[1]);
+                } else {
+                    Log::warning('Não foi possível extrair a seção FEEDBACK_DETALHADO da resposta da IA para a redação ID: ' . $essay->id);
+                }
+
+                // --- Fim do Parsing ---
+
+                // Atualizar os campos da redação principal
+                $essay->overall_score = $overallScore;
+                $essay->ia_feedback = $detailedFeedback; // Armazena o feedback detalhado completo
+                $essay->analyzed_at = now();
+                $essay->status = 'corrected'; // <--- ALTERADO PARA 'corrected'
                 $essay->save();
 
-                return redirect()->route('feedback', $essay->id)->with('success', 'Redação analisada pela IA!');
+                return true;
 
             } else {
-                // Erro na resposta da API
-                $errorMessage = $response->json()['error']['message'] ?? 'Erro desconhecido na API da IA.';
-                \Log::error("IA API Error: " . $errorMessage . " - " . $response->body());
-                return back()->with('error', 'Erro ao analisar a redação: ' . $errorMessage);
+                $errorDetails = $response->json()['error']['message'] ?? 'Erro desconhecido na API da OpenAI.';
+                Log::error('Erro na API da OpenAI (status: ' . $response->status() . '): ' . $errorDetails . ' | Resposta completa: ' . $response->body());
+                return false;
             }
 
         } catch (\Exception $e) {
-            // Capturar e logar exceções de rede ou outras
-            \Log::error("Error communicating with IA API: " . $e->getMessage());
-            return back()->with('error', 'Erro de comunicação com o serviço de IA. Tente novamente mais tarde.');
+            Log::error('Exceção ao comunicar com a API da OpenAI: ' . $e->getMessage() . ' | Linha: ' . $e->getLine() . ' | Arquivo: ' . $e->getFile());
+            return false;
         }
     }
 }

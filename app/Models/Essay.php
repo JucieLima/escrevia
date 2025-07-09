@@ -21,6 +21,9 @@ class Essay extends Model
         'title',
         'content',
         'overall_score',
+        'status',
+        'ia_feedback',
+        'analyzed_at',
     ];
 
     /**
