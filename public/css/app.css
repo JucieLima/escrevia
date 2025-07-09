@@ -1,3 +1,4 @@
+@import url(https://fonts.googleapis.com/css2?family=Playwrite+VN+Guides&display=swap);
 *, ::before, ::after {
   --tw-border-spacing-x: 0;
   --tw-border-spacing-y: 0;
@@ -1230,6 +1231,9 @@ select {
 .-top-1 {
   top: -0.25rem;
 }
+.bottom-0 {
+  bottom: 0px;
+}
 .left-0 {
   left: 0px;
 }
@@ -1348,6 +1352,9 @@ select {
 .h-10 {
   height: 2.5rem;
 }
+.h-12 {
+  height: 3rem;
+}
 .h-14 {
   height: 3.5rem;
 }
@@ -1383,6 +1390,9 @@ select {
 }
 .min-h-\[180px\] {
   min-height: 180px;
+}
+.min-h-\[300px\] {
+  min-height: 300px;
 }
 .min-h-\[72px\] {
   min-height: 72px;
@@ -1505,6 +1515,9 @@ select {
 .resize-none {
   resize: none;
 }
+.resize-y {
+  resize: vertical;
+}
 .list-inside {
   list-style-position: inside;
 }
@@ -1598,11 +1611,6 @@ select {
   margin-top: calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));
   margin-bottom: calc(0.25rem * var(--tw-space-y-reverse));
 }
-.space-y-2 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-y-reverse: 0;
-  margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));
-  margin-bottom: calc(0.5rem * var(--tw-space-y-reverse));
-}
 .overflow-hidden {
   overflow: hidden;
 }
@@ -1643,17 +1651,11 @@ select {
 .border {
   border-width: 1px;
 }
-.border-2 {
-  border-width: 2px;
-}
 .border-b {
   border-bottom-width: 1px;
 }
 .border-b-2 {
   border-bottom-width: 2px;
-}
-.border-b-\[3px\] {
-  border-bottom-width: 3px;
 }
 .border-l-4 {
   border-left-width: 4px;
@@ -1669,9 +1671,6 @@ select {
 }
 .border-t-2 {
   border-top-width: 2px;
-}
-.border-dashed {
-  border-style: dashed;
 }
 .border-none {
   border-style: none;
@@ -1712,23 +1711,20 @@ select {
   --tw-border-opacity: 1;
   border-color: rgb(156 163 175 / var(--tw-border-opacity, 1));
 }
+.border-green-400 {
+  --tw-border-opacity: 1;
+  border-color: rgb(74 222 128 / var(--tw-border-opacity, 1));
+}
 .border-indigo-400 {
   --tw-border-opacity: 1;
   border-color: rgb(129 140 248 / var(--tw-border-opacity, 1));
 }
+.border-red-400 {
+  --tw-border-opacity: 1;
+  border-color: rgb(248 113 113 / var(--tw-border-opacity, 1));
+}
 .border-transparent {
   border-color: transparent;
-}
-.border-b-\[\#111418\] {
-  --tw-border-opacity: 1;
-  border-bottom-color: rgb(17 20 24 / var(--tw-border-opacity, 1));
-}
-.border-b-escreviaSecondary {
-  --tw-border-opacity: 1;
-  border-bottom-color: rgb(5 20 64 / var(--tw-border-opacity, 1));
-}
-.border-b-transparent {
-  border-bottom-color: transparent;
 }
 .border-t-\[\#dde1e3\] {
   --tw-border-opacity: 1;
@@ -1758,10 +1754,6 @@ select {
   --tw-bg-opacity: 1;
   background-color: rgb(219 234 254 / var(--tw-bg-opacity, 1));
 }
-.bg-escreviaAccent {
-  --tw-bg-opacity: 1;
-  background-color: rgb(242 113 33 / var(--tw-bg-opacity, 1));
-}
 .bg-escreviaAccent-light {
   --tw-bg-opacity: 1;
   background-color: rgb(254 232 216 / var(--tw-bg-opacity, 1));
@@ -1781,6 +1773,14 @@ select {
 .bg-gray-100 {
   --tw-bg-opacity: 1;
   background-color: rgb(243 244 246 / var(--tw-bg-opacity, 1));
+}
+.bg-gray-200 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(229 231 235 / var(--tw-bg-opacity, 1));
+}
+.bg-gray-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(249 250 251 / var(--tw-bg-opacity, 1));
 }
 .bg-gray-800 {
   --tw-bg-opacity: 1;
@@ -1906,10 +1906,6 @@ select {
   padding-top: 2.5rem;
   padding-bottom: 2.5rem;
 }
-.py-14 {
-  padding-top: 3.5rem;
-  padding-bottom: 3.5rem;
-}
 .py-2 {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
@@ -1942,9 +1938,6 @@ select {
 }
 .pb-3 {
   padding-bottom: 0.75rem;
-}
-.pb-\[13px\] {
-  padding-bottom: 13px;
 }
 .pl-14 {
   padding-left: 3.5rem;
@@ -1988,11 +1981,8 @@ select {
 .text-justify {
   text-align: justify;
 }
-.font-handwritten {
-  font-family: "Patrick Hand", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-}
-.font-sans {
-  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+.font-playwrite-vn {
+  font-family: "Playwrite Viet Nam Guides", cursive, sans-serif;
 }
 .text-2xl {
   font-size: 1.5rem;
@@ -2022,6 +2012,10 @@ select {
   font-size: 0.875rem;
   line-height: 1.25rem;
 }
+.text-xl {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
 .text-xs {
   font-size: 0.75rem;
   line-height: 1rem;
@@ -2040,9 +2034,6 @@ select {
 }
 .uppercase {
   text-transform: uppercase;
-}
-.italic {
-  font-style: italic;
 }
 .leading-5 {
   line-height: 1.25rem;
@@ -2107,10 +2098,6 @@ select {
   --tw-text-opacity: 1;
   color: rgb(242 113 33 / var(--tw-text-opacity, 1));
 }
-.text-escreviaFeedback {
-  --tw-text-opacity: 1;
-  color: rgb(72 95 155 / var(--tw-text-opacity, 1));
-}
 .text-escreviaPrimary {
   --tw-text-opacity: 1;
   color: rgb(233 78 119 / var(--tw-text-opacity, 1));
@@ -2151,9 +2138,17 @@ select {
   --tw-text-opacity: 1;
   color: rgb(17 24 39 / var(--tw-text-opacity, 1));
 }
+.text-green-500 {
+  --tw-text-opacity: 1;
+  color: rgb(34 197 94 / var(--tw-text-opacity, 1));
+}
 .text-green-600 {
   --tw-text-opacity: 1;
   color: rgb(22 163 74 / var(--tw-text-opacity, 1));
+}
+.text-green-700 {
+  --tw-text-opacity: 1;
+  color: rgb(21 128 61 / var(--tw-text-opacity, 1));
 }
 .text-green-800 {
   --tw-text-opacity: 1;
@@ -2163,9 +2158,17 @@ select {
   --tw-text-opacity: 1;
   color: rgb(67 56 202 / var(--tw-text-opacity, 1));
 }
+.text-red-500 {
+  --tw-text-opacity: 1;
+  color: rgb(239 68 68 / var(--tw-text-opacity, 1));
+}
 .text-red-600 {
   --tw-text-opacity: 1;
   color: rgb(220 38 38 / var(--tw-text-opacity, 1));
+}
+.text-red-700 {
+  --tw-text-opacity: 1;
+  color: rgb(185 28 28 / var(--tw-text-opacity, 1));
 }
 .text-red-800 {
   --tw-text-opacity: 1;
@@ -2265,6 +2268,23 @@ select {
 .\[background-position-y\:0\.75rem\] {
   background-position-y: 0.75rem;
 }
+/* Garante que o container do editor se adapte à altura */
+.ck-editor__editable_inline {
+    min-height: 400px; /* Aumente este valor conforme sua necessidade */
+    max-height: 800px; /* Opcional: define uma altura máxima */
+    overflow-y: auto; /* Adiciona scroll se o conteúdo exceder a altura */
+}
+
+/* Ajuste para a barra de ferramentas ficar no topo do editor */
+.ck-editor__top {
+    position: sticky;
+    top: 0;
+    z-index: 100; /* Garanta que fique acima de outros elementos */
+    background-color: white; /* Cor de fundo para a barra de ferramentas */
+}
+.ck.ck-powered-by{
+    display: none;
+}
 .placeholder\:text-\[\#60758a\]::-moz-placeholder {
   --tw-text-opacity: 1;
   color: rgb(96 117 138 / var(--tw-text-opacity, 1));
@@ -2292,6 +2312,10 @@ select {
 .hover\:bg-gray-100:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(243 244 246 / var(--tw-bg-opacity, 1));
+}
+.hover\:bg-gray-300:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(209 213 219 / var(--tw-bg-opacity, 1));
 }
 .hover\:bg-gray-50:hover {
   --tw-bg-opacity: 1;
@@ -2356,10 +2380,6 @@ select {
   --tw-border-opacity: 1;
   border-color: rgb(233 78 119 / var(--tw-border-opacity, 1));
 }
-.focus\:border-escreviaSecondary:focus {
-  --tw-border-opacity: 1;
-  border-color: rgb(5 20 64 / var(--tw-border-opacity, 1));
-}
 .focus\:border-gray-300:focus {
   --tw-border-opacity: 1;
   border-color: rgb(209 213 219 / var(--tw-border-opacity, 1));
@@ -2375,6 +2395,9 @@ select {
 .focus\:border-indigo-700:focus {
   --tw-border-opacity: 1;
   border-color: rgb(67 56 202 / var(--tw-border-opacity, 1));
+}
+.focus\:border-transparent:focus {
+  border-color: transparent;
 }
 .focus\:bg-escreviaAccent:focus {
   --tw-bg-opacity: 1;
@@ -2429,6 +2452,11 @@ select {
   --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(0px + var(--tw-ring-offset-width)) var(--tw-ring-color);
   box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
 }
+.focus\:ring-1:focus {
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
 .focus\:ring-2:focus {
   --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
   --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
@@ -2441,9 +2469,9 @@ select {
 .focus\:ring-escreviaPrimary\/50:focus {
   --tw-ring-color: rgb(233 78 119 / 0.5);
 }
-.focus\:ring-escreviaSecondary:focus {
+.focus\:ring-gray-500:focus {
   --tw-ring-opacity: 1;
-  --tw-ring-color: rgb(5 20 64 / var(--tw-ring-opacity, 1));
+  --tw-ring-color: rgb(107 114 128 / var(--tw-ring-opacity, 1));
 }
 .focus\:ring-indigo-200:focus {
   --tw-ring-opacity: 1;
@@ -2462,6 +2490,10 @@ select {
 .active\:bg-gray-100:active {
   --tw-bg-opacity: 1;
   background-color: rgb(243 244 246 / var(--tw-bg-opacity, 1));
+}
+.active\:bg-gray-400:active {
+  --tw-bg-opacity: 1;
+  background-color: rgb(156 163 175 / var(--tw-bg-opacity, 1));
 }
 .active\:bg-gray-900:active {
   --tw-bg-opacity: 1;
@@ -2502,6 +2534,10 @@ select {
 
   .sm\:ml-6 {
     margin-left: 1.5rem;
+  }
+
+  .sm\:inline {
+    display: inline;
   }
 
   .sm\:flex {

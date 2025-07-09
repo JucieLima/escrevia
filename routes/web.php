@@ -23,12 +23,6 @@ Route::middleware(['auth'])->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
-    Route::get('/enviar-redacao', function () {
-        return view('submit-essay');
-    })->name('submit-essay');
-    Route::get('/configuracoes', function () {
-        return view('settings');
-    })->name('settings');
     Route::get('/redacoes/{essay}/feedback', [EssayController::class, 'showFeedback'])->name('essay-feedback');
 
     Route::get('/redacoes/historico', [EssayController::class, 'index'])->name('history');
@@ -37,15 +31,19 @@ Route::middleware(['auth'])->group(function () {
         return view('submit-essay');
     })->name('submit-essay');
 
-    Route::post('/essays', [EssayController::class, 'store'])->name('essay.store');
+    Route::post('/essay/auto-save', [EssayController::class, 'autoSaveDraft'])->name('essay.auto-save');
+
+    // As rotas para o formulário principal (store e edit)
+    Route::post('/essay', [EssayController::class, 'store'])->name('essay.store');
+
+    Route::get('/essay/create', [EssayController::class, 'create'])->name('essay.create');
+
+    Route::get('/essay/{essay}/edit', [EssayController::class, 'edit'])->name('essay.edit');
+
 
     Route::get('/configuracoes', function () {
         return view('settings');
     })->name('settings');
-
-    Route::get('/redacoes/feedback', function () {
-        return view('essay-feedback');
-    })->name('feedback');
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {

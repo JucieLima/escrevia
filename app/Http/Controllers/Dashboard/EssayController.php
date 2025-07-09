@@ -16,6 +16,8 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
+use Parsedown;
+
 class EssayController extends Controller
 {
     /**
@@ -61,59 +63,72 @@ class EssayController extends Controller
         return view('essay-feedback', compact('essay'));
     }
 
+    /**
+     * Store or update an essay, either as a draft or for analysis.
+     * Agora unifica a lógica de criação e atualização para o formulário.
+     */
     public function store(Request $request)
     {
-        // 1. Validação dos dados de entrada
-        $validatedData = $request->validate([
-            'title' => 'nullable|string|max:255', // Título: opcional, string, max 255 caracteres
-            'content' => 'required|string|min:50|max:10000', // Conteúdo: obrigatório, string, min 50, max 10.000 caracteres
-            // Ajuste o 'max' para content conforme sua necessidade real para 30 linhas + folga.
-            // 10.000 caracteres é uma boa folga para muitas redações.
-        ]);
+        $action = $request->input('action'); // 'draft' or 'submit'
 
-        $title = $validatedData['title'];
-        $content = $validatedData['content'];
+        // Regras de validação
+        $rules = [
+            'essay_id' => 'nullable|exists:essays,id', // Opcional, para identificar rascunhos existentes
+            'title' => 'required|string|max:255',
+            'theme' => 'required|string|max:255',
+            'content' => 'required|string',
+        ];
 
-        // 2. Lógica para gerar o título se não fornecido
-        if (empty($title)) {
-            preg_match('/^(.+?[.!?])(?:\s|$)/s', $content, $matches);
-            if (isset($matches[1])) {
-                $title = Str::limit(trim($matches[1]), 100, '...');
-            } else {
-                $title = Str::limit(trim($content), 100, '...');
+        // Se for submissão final, o conteúdo precisa ser mais substancial
+        if ($action === 'submit') {
+            $rules['content'] .= '|min:100'; // Exemplo: mínimo de 100 caracteres para análise
+        }
+
+        $validated = $request->validate($rules);
+
+        $user = Auth::user();
+
+        // Encontrar a redação existente ou criar uma nova
+        if (isset($validated['essay_id']) && $validated['essay_id']) {
+            // Tentamos encontrar a redação que pertence ao usuário logado
+            $essay = $user->essays()->where('id', $validated['essay_id'])->first();
+
+            if (!$essay) {
+                // Se a redação não for encontrada ou não pertencer ao usuário, aborta.
+                // Isso é uma medida de segurança.
+                abort(403, 'Redação não encontrada ou você não tem permissão para editá-la.');
             }
-            $title = Str::limit($title, 255); // Garante que não exceda o limite da coluna
+        } else {
+            // Se não houver essay_id, é uma nova redação
+            $essay = new Essay();
+            $essay->user_id = $user->id;
         }
 
-        // 3. Salvar a redação no banco de dados
-        $essay = Essay::create([
-            'user_id' => auth()->id(),
-            'title' => $title,
-            'content' => $content,
-            'status' => 'pending_evaluation',
-        ],
-            // Mensagens personalizadas (se precisar de algo muito específico para a regra)
-            [
-                'content.required' => 'Por favor, digite sua redação.',
-            ],
-            // Nomes de atributos personalizados (aqui é onde você muda o nome do campo)
-            [
-                'title' => 'título',
-                'content' => 'redação',
-            ]
-        );
+        // Atualiza os dados da redação com os valores validados
+        $essay->title = $validated['title'];
+        $essay->theme = $validated['theme'];
+        $essay->content = $validated['content'];
 
-        // Chama a função para analisar a redação imediatamente após o salvamento
-        $analysisResult = $this->analyzeEssayWithIA($essay);
+        if ($action === 'draft') {
+            $essay->status = 'draft';
+            $essay->save();
+            // Após salvar/atualizar o rascunho, redirecionamos para a rota de edição
+            // para que o auto-save continue funcionando.
+            return redirect()->route('essay.edit', $essay->id)->with('success', 'Rascunho salvo com sucesso!');
+        } else { // action is 'submit'
+            $essay->status = 'pending_analysis'; // Define status para indicar processamento
+            $essay->save(); // Salva a atualização antes de enviar para a IA
 
-        if (!$analysisResult) {
-            // Se houver um erro na análise da IA, podemos adicionar uma mensagem ou logar
-            // Por enquanto, vamos apenas redirecionar com uma mensagem de erro genérica
-            return redirect()->route('history')->with('error', 'Redação enviada, mas houve um problema ao processá-la pela IA. Tente novamente mais tarde ou contate o suporte.');
+            if ($this->analyzeEssayWithIA($essay)) {
+                // analyzeEssayWithIA já atualiza o status para 'corrected' se for bem-sucedido
+                return redirect()->route('essay.showFeedback', $essay->id)->with('success', 'Redação enviada para análise e corrigida com sucesso!');
+            } else {
+                // Se a análise falhar, atualiza o status de volta
+                $essay->status = 'analysis_failed';
+                $essay->save();
+                return redirect()->back()->with('error', 'Houve um erro ao analisar sua redação. Por favor, tente novamente mais tarde.');
+            }
         }
-
-        // 4. Redirecionar com mensagem de sucesso
-        return redirect()->route('history')->with('success', 'Redação enviada e encaminhada para análise!');
     }
 
     public function create()
@@ -121,6 +136,11 @@ class EssayController extends Controller
         return view('submit-essay');
     }
 
+    /**
+     * Envia a redação para análise de IA e atualiza o modelo Essay.
+     * @param Essay $essay
+     * @return bool Retorna true se a análise for bem-sucedida, false caso contrário.
+     */
     /**
      * Envia a redação para análise de IA e atualiza o modelo Essay.
      * @param Essay $essay
@@ -147,11 +167,14 @@ class EssayController extends Controller
             // O prompt atualizado com as tags
             $prompt = "Você é um professor especialista em correção de redações do ENEM, com amplo conhecimento nas competências avaliadas pelo INEP. Sua tarefa é analisar a redação abaixo, atribuir notas de 0 a 200 para cada uma das 5 competências e fornecer um feedback detalhado, apontando pontos fortes, áreas de melhoria e sugestões claras para evolução.
 
-            C1: Domínio da escrita formal da Língua Portuguesa.
-            C2: Compreensão da proposta de redação
-            C3: Organização das ideias e defesa do ponto de vista
-            C4: Conhecimento dos mecanismos linguísticos para a construção da argumentação
-            C5: Apresentação de proposta de intervenção
+            **O tema da redação é: " . $essay->theme . "**
+
+            As competências a serem avaliadas são:
+            C1: Domínio da norma culta
+            C2: Compreensão do tema
+            C3: Argumentação
+            C4: Coesão
+            C5: Proposta de intervenção
 
             **Instruções de Formatação da Resposta:**
             Siga exatamente este formato para a sua resposta. Use as tags delimitadoras para cada seção.
@@ -191,14 +214,16 @@ class EssayController extends Controller
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
-            ])->timeout(90)->post('https://api.openai.com/v1/chat/completions', [
-                'model' => 'gpt-3.5-turbo',
-                'messages' => [
-                    ['role' => 'user', 'content' => $prompt]
-                ],
-                'max_tokens' => 1500,
-                'temperature' => 0.7,
-            ]);
+            ])
+                ->withOptions(['verify' => 'C:\wamp64\bin\php\php8.3.14\extras\ssl\cacert.pem'])
+                ->timeout(90)->post('https://api.openai.com/v1/chat/completions', [
+                    'model' => 'gpt-3.5-turbo',
+                    'messages' => [
+                        ['role' => 'user', 'content' => $prompt]
+                    ],
+                    'max_tokens' => 1500,
+                    'temperature' => 0.7,
+                ]);
 
             if ($response->successful()) {
                 $iaResponse = $response->json();
@@ -209,12 +234,15 @@ class EssayController extends Controller
                     return false;
                 }
 
+                // Crie uma instância do Parsedown
+                $parsedown = new Parsedown();
+
                 // --- Parsing da Resposta da IA ---
 
                 // 1. Extrair Pontuação Total
                 $overallScore = null;
                 if (preg_match('/<PONTUACAO_TOTAL>\s*Pontuação Total:\s*(\d+)\s*<\/PONTUACAO_TOTAL>/s', $analysisText, $matches)) {
-                    $overallScore = (int) $matches[1];
+                    $overallScore = (int)$matches[1];
                 } else {
                     Log::warning('Não foi possível extrair a Pontuação Total da resposta da IA para a redação ID: ' . $essay->id);
                 }
@@ -234,8 +262,11 @@ class EssayController extends Controller
                     preg_match_all('/(C\d+):\s*(\d+)\s*-\s*(.*)/m', $notesSection, $matches, PREG_SET_ORDER);
                     foreach ($matches as $match) {
                         $competencyShortName = trim($match[1]); // Ex: "C1"
-                        $score = (int) $match[2];
+                        $score = (int)$match[2];
                         $feedbackText = trim($match[3]);
+
+                        // Converte o feedback individual da competência de Markdown para HTML
+                        $feedbackTextHtml = $parsedown->text($feedbackText);
 
                         // Mapeia o nome curto para o nome completo
                         $competencyFullName = $competencyNamesMap[$competencyShortName] ?? $competencyShortName;
@@ -244,7 +275,7 @@ class EssayController extends Controller
                         $essay->competencyFeedbacks()->create([
                             'competency_name' => $competencyFullName, // Usando o nome completo
                             'score' => $score,
-                            'feedback_text' => $feedbackText,
+                            'feedback_text' => $feedbackTextHtml, // Salva o HTML
                         ]);
                     }
                 }
@@ -253,6 +284,8 @@ class EssayController extends Controller
                 $detailedFeedback = null;
                 if (preg_match('/<FEEDBACK_DETALHADO>(.*?)<\/FEEDBACK_DETALHADO>/s', $analysisText, $matches)) {
                     $detailedFeedback = trim($matches[1]);
+                    // Converte o feedback detalhado de Markdown para HTML
+                    $detailedFeedbackHtml = $parsedown->text($detailedFeedback);
                 } else {
                     Log::warning('Não foi possível extrair a seção FEEDBACK_DETALHADO da resposta da IA para a redação ID: ' . $essay->id);
                 }
@@ -261,9 +294,9 @@ class EssayController extends Controller
 
                 // Atualizar os campos da redação principal
                 $essay->overall_score = $overallScore;
-                $essay->ia_feedback = $detailedFeedback; // Armazena o feedback detalhado completo
+                $essay->ia_feedback = $detailedFeedbackHtml ?? null; // Armazena o feedback detalhado completo, já em HTML
                 $essay->analyzed_at = now();
-                $essay->status = 'corrected'; // <--- ALTERADO PARA 'corrected'
+                $essay->status = 'corrected';
                 $essay->save();
 
                 return true;
@@ -278,5 +311,57 @@ class EssayController extends Controller
             Log::error('Exceção ao comunicar com a API da OpenAI: ' . $e->getMessage() . ' | Linha: ' . $e->getLine() . ' | Arquivo: ' . $e->getFile());
             return false;
         }
+    }
+
+    /**
+     * Display the specified essay for editing (drafts).
+     * Você precisará criar esta view resources/views/edit-essay.blade.php
+     * ou adaptar submit-essay.blade.php para ser um template para ambos.
+     */
+    public function edit(Essay $essay)
+    {
+        // Certifique-se que o usuário tem permissão para editar esta redação
+        if ($essay->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        return view('submit-essay', compact('essay')); // Ou 'submit-essay' se for um template único
+    }
+
+    /**
+     * Handles AJAX auto-saving of essay drafts.
+     */
+    public function autoSaveDraft(Request $request)
+    {
+        $validated = $request->validate([
+            'essay_id' => 'nullable|exists:essays,id', // Pode ser nulo para novos rascunhos
+            'title' => 'required|string|max:255',
+            'theme' => 'required|string|max:255',
+            'content' => 'required|string',
+        ]);
+
+        $user = Auth::user();
+
+        // Encontrar a redação existente ou criar uma nova
+        if (isset($validated['essay_id']) && $validated['essay_id']) {
+            $essay = $user->essays()->where('id', $validated['essay_id'])->first();
+            if (!$essay) {
+                // Segurança: se o ID foi enviado mas não pertence ao usuário
+                return response()->json(['success' => false, 'message' => 'Rascunho não encontrado ou você não tem permissão para editá-lo.'], 403);
+            }
+        } else {
+            // É um novo rascunho, crie uma nova instância
+            $essay = new Essay();
+            $essay->user_id = $user->id;
+        }
+
+        $essay->title = $validated['title'];
+        $essay->theme = $validated['theme'];
+        $essay->content = $validated['content'];
+        $essay->status = 'draft'; // Sempre 'draft' para auto-save
+        $essay->save();
+
+        // Retorna o ID da redação (novo ou existente) para o frontend
+        return response()->json(['success' => true, 'message' => 'Rascunho salvo!', 'essay_id' => $essay->id]);
     }
 }

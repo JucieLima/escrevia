@@ -34,7 +34,7 @@
                             $overallScoreTextColorClass = 'text-escreviaAccent';
                             $overallScoreBgColorClass = 'bg-escreviaAccent-light';
                         } elseif ($essay->overall_score < 800) { // Faixa 700-799
-                            $overallScoreTextColorClass = 'text-escreviaFeedback';
+                            $overallScoreTextColorClass = 'text-escreviaSecondary'; // Corrigido para usar escreviaSecondary
                             $overallScoreBgColorClass = 'bg-escreviaSecondary-light';
                         } else { // Faixa 800+
                             $overallScoreTextColorClass = 'text-green-600';
@@ -79,7 +79,7 @@
                                     $competencyScoreTextColorClass = 'text-escreviaAccent';
                                     $competencyScoreBgColorClass = 'bg-escreviaAccent-light';
                                 } elseif ($feedback->score < 180) { // Faixa 140-179 (ajustado para 180)
-                                    $competencyScoreTextColorClass = 'text-escreviaFeedback';
+                                    $competencyScoreTextColorClass = 'text-escreviaSecondary'; // Corrigido para usar escreviaSecondary
                                     $competencyScoreBgColorClass = 'bg-escreviaSecondary-light';
                                 } else { // Faixa 180-200
                                     $competencyScoreTextColorClass = 'text-green-600';
@@ -104,7 +104,7 @@
                                 </div>
                             </summary>
                             <p class="text-[#60758a] text-sm font-normal leading-normal pb-2">
-                                {{ $feedback->feedback_text }}
+                                {!! $feedback->feedback_text !!}
                             </p>
                         </details>
                     @endforeach
@@ -115,28 +115,20 @@
             <h2 class="text-escreviaSecondary text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
                 Sugestões para Melhoria
             </h2>
-            @if($essay->interventions->isEmpty())
-                <p class="text-[#60758a] text-sm font-normal leading-normal pb-3 pt-1 px-4">
-                    Nenhuma sugestão de melhoria disponível ainda.
-                </p>
-            @else
-                <p class="text-[#111418] text-base font-normal leading-normal pb-3 pt-1 px-4">
-                    Revise os pontos abaixo para identificar áreas que precisam de melhorias:
-                </p>
-                <div class="flex flex-col p-4 gap-3">
-                    <ul class="list-disc list-inside space-y-2 text-[#60758a]">
-                        @foreach($essay->interventions as $intervention)
-                            <li>
-                                <span class="font-semibold text-[#111418]">{{ $intervention->type ?? 'Ponto Geral' }}:</span>
-                                {{ $intervention->message }}
-                                @if($intervention->suggested_action)
-                                    <p class="text-sm italic ml-4">Sugestão: {{ $intervention->suggested_action }}</p>
-                                @endif
-                            </li>
-                        @endforeach
-                    </ul>
+            {{-- NOVO BLOCO: Exibe o ia_feedback da redação --}}
+            @if($essay->ia_feedback)
+                {{-- A div modificada com padding e background --}}
+                <div class="flex flex-col p-4 gap-3 bg-gray-50 rounded-lg shadow-sm">
+                    <div class="prose prose-gray max-w-none text-gray-700">
+                        {!! $essay->ia_feedback !!}
+                    </div>
                 </div>
+            @else
+                <p class="text-[#60758a] text-sm font-normal leading-normal pb-3 pt-1 px-4">
+                    Nenhuma sugestão de melhoria disponível ainda. A redação pode não ter sido analisada.
+                </p>
             @endif
+            {{-- FIM DO NOVO BLOCO --}}
 
             {{-- Título "Sua Redação enviada" - AGORA COM escreviaSecondary --}}
             <h2 class="text-escreviaSecondary text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5 mt-8">
@@ -151,11 +143,11 @@
                 <div class="absolute left-10 inset-y-0 w-[1px] bg-red-400 z-0"></div>
                 {{-- Título da redação dentro da seção da redação - AGORA COM escreviaSecondary --}}
                 <h2 class="prose prose-gray max-w-none text-justify text-escreviaSecondary
-                                relative z-10 p-4 pl-14 leading-[1.5rem] text-lg font-handwritten mb-4" style="font-family: 'Patrick Hand', ui-sans-serif, system-ui, sans-serif;">
+                                relative z-10 p-4 pl-14 leading-[1.5rem] text-lg font-playwrite-vn mb-4">
                     {{$essay->title}}
                 </h2>
                 <article class="prose prose-gray max-w-none text-justify text-gray-700
-                                relative z-10 p-4 pl-14 leading-[1.5rem] text-base font-handwritten" style="font-family: 'Patrick Hand', ui-sans-serif, system-ui, sans-serif;">
+                                relative z-10 p-4 pl-14 leading-[1.5rem] text-xl font-playwrite-vn">
                     {!! nl2br($essay->content) !!}
                 </article>
             </section>

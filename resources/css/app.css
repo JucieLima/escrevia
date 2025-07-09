@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Playwrite+VN+Guides&display=swap');
+/* Garante que o container do editor se adapte à altura */
+.ck-editor__editable_inline {
+    min-height: 400px; /* Aumente este valor conforme sua necessidade */
+    max-height: 800px; /* Opcional: define uma altura máxima */
+    overflow-y: auto; /* Adiciona scroll se o conteúdo exceder a altura */
+}
+
+/* Ajuste para a barra de ferramentas ficar no topo do editor */
+.ck-editor__top {
+    position: sticky;
+    top: 0;
+    z-index: 100; /* Garanta que fique acima de outros elementos */
+    background-color: white; /* Cor de fundo para a barra de ferramentas */
+}
+.ck.ck-powered-by{
+    display: none;
+}

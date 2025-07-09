@@ -1,191 +1,255 @@
 @extends('layouts.app')
-@section('title', 'Enviar Redação')
+@section('title', 'Editar Redação Rascunho')
 @section('content')
-    <div class="layout-content-container flex flex-col max-w-[960px] flex-1">
-        <div class="flex flex-wrap justify-between gap-3 p-4">
-            <div class="flex min-w-72 flex-col gap-3">
-                <p class="text-escreviaSecondary tracking-light text-[32px] font-bold leading-tight">Envie sua
-                    redação</p>
-                <p class="text-[#60758a] text-sm font-normal leading-normal">Escolha seu método preferido para enviar
-                    sua redação para feedback.</p>
-            </div>
-        </div>
+    <div class="flex flex-1 justify-center py-5 px-0">
+        <div class="layout-content-container flex flex-col max-w-[960px] flex-1">
+            <p class="text-escreviaSecondary tracking-light text-[32px] font-bold leading-tight min-w-72 p-4">
+                Editar Redação (Rascunho)
+            </p>
 
-        {{-- Tabs Navigation --}}
-        <div class="pb-3">
-            <div class="flex border-b border-[#dbe0e6] px-4 gap-8">
-                {{-- Botão para a aba de Carregar PDF --}}
-                <button id="tab-pdf"
-                        class="tab-button flex flex-col items-center justify-center border-b-[3px] border-b-escreviaSecondary text-escreviaSecondary pb-[13px] pt-4"
-                        data-tab="pdf-upload">
-                    <p class="text-sm font-bold leading-normal tracking-[0.015em]">Carregar PDF</p>
-                </button>
-
-                {{-- Botão para a aba de Digitar Redação --}}
-                <button id="tab-type"
-                        class="tab-button flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-[#60758a] pb-[13px] pt-4"
-                        data-tab="type-essay">
-                    <p class="text-sm font-bold leading-normal tracking-[0.015em]">Digitar Redação</p>
-                </button>
-
-                {{-- Botão para a aba de Manuscrito (OCR) --}}
-                <button id="tab-handwritten"
-                        class="tab-button flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-[#60758a] pb-[13px] pt-4"
-                        data-tab="handwritten-ocr">
-                    <p class="text-sm font-bold leading-normal tracking-[0.015em]">Manuscrito (OCR)</p>
-                </button>
-            </div>
-        </div>
-
-        {{-- Tabs Content --}}
-        <div class="tab-content-container">
-            {{-- Conteúdo da aba "Carregar PDF" (Inicialmente visível) --}}
-            <div id="pdf-upload" class="tab-pane flex flex-col p-4">
-                <div
-                    class="flex flex-col items-center gap-6 rounded-lg border-2 border-dashed border-[#dbe0e6] px-6 py-14">
-                    <div class="flex max-w-[480px] flex-col items-center gap-2">
-                        <p class="text-escreviaSecondary text-lg font-bold leading-tight tracking-[-0.015em] max-w-[480px] text-center">
-                            Arraste e solte seu PDF aqui</p>
-                        <p class="text-[#111418] text-sm font-normal leading-normal max-w-[480px] text-center">Ou
-                            navegue para selecionar um arquivo do seu computador</p>
-                    </div>
-                    <button
-                        class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#f0f2f5] text-[#111418] text-sm font-bold leading-normal tracking-[0.015em]"
-                    >
-                        <span class="truncate">Navegar pelos arquivos</span>
-                    </button>
+            @if (session('success'))
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mx-4 mb-4" role="alert">
+                    <span class="block sm:inline">{{ session('success') }}</span>
                 </div>
-                <p class="text-[#60758a] text-sm font-normal leading-normal pb-3 pt-1 px-4 text-center">Tipos de arquivo
-                    suportados: PDF. Tamanho máximo do arquivo: 10 MB</p>
-                <div class="flex px-4 py-3 justify-center">
-                    <button
-                        class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#0c7ff2] text-white text-sm font-bold leading-normal tracking-[0.015em]"
-                    >
-                        <span class="truncate">Enviar Redação</span>
-                    </button>
+            @endif
+
+            @if ($errors->any())
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-4 mb-4" role="alert">
+                    <strong class="font-bold">Ops!</strong>
+                    <span class="block sm:inline">Houve alguns problemas com sua submissão.</span>
+                    <ul class="mt-3 list-disc list-inside">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
-            </div>
+            @endif
 
-            {{-- Conteúdo da aba "Digitar Redação" (Inicialmente oculto) --}}
-            <div id="type-essay" class="tab-pane hidden flex flex-col p-4">
-                <form action="{{ route('essay.store') }}" method="POST" class="flex flex-col gap-4">
-                    @csrf
-                    <div class="flex flex-col gap-2">
-                        <label for="title" class="text-escreviaSecondary text-sm font-semibold">Título da Redação
-                            (Opcional)</label>
-                        <input type="text" id="title" name="title"
-                               class="w-full rounded-lg border px-3 py-2 text-escreviaSecondary font-handwritten
-                                  @error('title') border-red-500 @else border-[#dbe0e6] @enderror
-                                  focus:border-escreviaSecondary focus:ring focus:ring-escreviaSecondary focus:ring-opacity-50"
-                               placeholder="Opcional: Ex: Os desafios da educação no século XXI"
-                               value="{{ old('title') }}"> {{-- Repopula o campo --}}
-                        @error('title')
-                        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label for="content" class="text-escreviaSecondary text-sm font-semibold">Digitar
-                            Redação</label>
-                        <textarea id="content" name="content" rows="15"
-                                  class="w-full rounded-lg border px-3 py-2 text-escreviaSecondary font-handwritten resize-y
-                                     @error('content') border-escreviaPrimary @else border-[#dbe0e6] @enderror
-                                     focus:border-escreviaSecondary focus:ring focus:ring-escreviaSecondary focus:ring-opacity-50"
-                                  placeholder="Comece a digitar sua redação aqui..."
-                                  required> {{-- Mantemos o required aqui para o HTML5 --}}
-                            {{ old('content') }}</textarea> {{-- Repopula a textarea --}}
-                        @error('content')
-                        <p class="text-escreviaPrimary text-xs italic mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="flex px-4 py-3 justify-center">
-                        <button type="submit"
-                                class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-escreviaAccent text-white text-sm font-bold leading-normal tracking-[0.015em]"
-                        >
-                            <span class="truncate">Enviar Redação Digitada</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
+            {{-- O formulário agora envia para a rota de update se você tiver uma, ou continua para store --}}
+            {{-- Para rascunhos, vamos focar no auto-save e no botão de submissão final --}}
+            <form id="essayForm" action="{{ route('essay.store') }}" method="POST" class="flex flex-col p-4 gap-4">
+                @csrf
 
-            {{-- Conteúdo da aba "Manuscrito (OCR)" (Inicialmente oculto) --}}
-            <div id="handwritten-ocr" class="tab-pane hidden flex flex-col p-4">
-                <div
-                    class="flex flex-col items-center gap-6 rounded-lg border-2 border-dashed border-[#dbe0e6] px-6 py-14">
-                    <div class="flex max-w-[480px] flex-col items-center gap-2">
-                        <p class="text-escreviaSecondary text-lg font-bold leading-tight tracking-[-0.015em] max-w-[480px] text-center">
-                            Em breve: Envie sua redação manuscrita!</p>
-                        <p class="text-[#111418] text-sm font-normal leading-normal max-w-[480px] text-center">
-                            Converteremos seu texto para digital usando OCR.</p>
-                    </div>
-                    <button
-                        class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#f0f2f5] text-[#111418] text-sm font-bold leading-normal tracking-[0.015em]"
-                    >
-                        <span class="truncate">Carregar Imagem/PDF Manuscrito</span>
-                    </button>
-                </div>
-                <p class="text-[#60758a] text-sm font-normal leading-normal pb-3 pt-1 px-4 text-center">Tipos de arquivo
-                    suportados: JPG, PNG, PDF. Tamanho máximo do arquivo: 10 MB</p>
-                <div class="flex px-4 py-3 justify-center">
-                    <button
-                        class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#0c7ff2] text-white text-sm font-bold leading-normal tracking-[0.015em]"
-                    >
-                        <span class="truncate">Enviar Manuscrito</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    @push('scripts')
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const tabButtons = document.querySelectorAll('.tab-button');
-                const tabPanes = document.querySelectorAll('.tab-pane');
-
-                function activateTab(tabId) {
-                    // Remove active styles from all buttons and hide all panes
-                    tabButtons.forEach(button => {
-                        button.classList.remove('border-b-escreviaSecondary', 'text-escreviaSecondary');
-                        button.classList.add('border-b-transparent', 'text-[#60758a]');
-                        button.querySelector('p').classList.remove('text-escreviaSecondary');
-                        button.querySelector('p').classList.add('text-[#60758a]');
-                    });
-                    tabPanes.forEach(pane => {
-                        pane.classList.add('hidden');
-                    });
-
-                    // Add active styles to the clicked button and show the corresponding pane
-                    const activeButton = document.querySelector(`[data-tab="${tabId}"]`);
-                    if (activeButton) {
-                        activeButton.classList.remove('border-b-transparent', 'text-[#60758a]');
-                        activeButton.classList.add('border-b-escreviaSecondary', 'text-escreviaSecondary');
-                        activeButton.querySelector('p').classList.remove('text-[#60758a]');
-                        activeButton.querySelector('p').classList.add('text-escreviaSecondary');
-                    }
-
-                    const activePane = document.getElementById(tabId);
-                    if (activePane) {
-                        activePane.classList.remove('hidden');
-                    }
-                }
-
-                // Determina qual aba deve ser ativada inicialmente.
-                // Se houver erros de validação (especialmente no campo 'content', que é obrigatório),
-                // ativamos a aba 'type-essay'. Caso contrário, a 'pdf-upload' (padrão).
-                @if ($errors->has('title') || $errors->has('content'))
-                activateTab('type-essay');
-                @else
-                activateTab('pdf-upload');
+                {{-- Campo escondido para o ID da redação, se existir (para rascunhos) --}}
+                @if(isset($essay) && $essay->id)
+                    <input type="hidden" name="essay_id" id="essay_id" value="{{ $essay->id }}">
                 @endif
 
-                // Add click event listeners to buttons
-                tabButtons.forEach(button => {
-                    button.addEventListener('click', function () {
-                        const tabId = this.dataset.tab;
-                        activateTab(tabId);
-                    });
+                {{-- Campo para o Título da Redação --}}
+                <div class="flex flex-col gap-2">
+                    <label for="title" class="text-[#111418] text-base font-medium leading-normal">Título da Redação:</label>
+                    <input type="text"
+                           id="title"
+                           name="title"
+                           class="w-full h-12 rounded-lg border border-[#dbe0e6] px-4 py-2
+                                  text-[#111418] text-base font-normal leading-normal
+                                  focus:outline-none focus:ring-1 focus:ring-escreviaPrimary
+                                  focus:border-transparent"
+                           placeholder="Ex: Os desafios da educação a distância no Brasil"
+                           value="{{ old('title', $essay->title ?? '') }}" {{-- Preenche com o valor da redação --}}
+                           required>
+                </div>
+
+                {{-- Campo: Tema da Redação --}}
+                <div class="flex flex-col gap-2">
+                    <label for="theme" class="text-[#111418] text-base font-medium leading-normal">Tema da Redação:</label>
+                    <input type="text"
+                           id="theme"
+                           name="theme"
+                           class="w-full h-12 rounded-lg border border-[#dbe0e6] px-4 py-2
+                                  text-[#111418] text-base font-normal leading-normal
+                                  focus:outline-none focus:ring-1 focus:ring-escreviaPrimary
+                                  focus:border-transparent"
+                           placeholder="Ex: A importância da leitura na formação do indivíduo"
+                           value="{{ old('theme', $essay->theme ?? '') }}" {{-- Preenche com o valor da redação --}}
+                           required>
+                </div>
+
+                {{-- Campo para o Conteúdo da Redação (Textarea) --}}
+                <div class="flex flex-col gap-2">
+                    <label for="content" class="text-[#111418] text-base font-medium leading-normal">Conteúdo da Redação:</label>
+                    <textarea id="editor"
+                              name="content"
+                              rows="15"
+                              class="w-full min-h-[300px] rounded-lg border border-[#dbe0e6] px-4 py-2
+                                     text-[#111418] text-base font-normal leading-normal resize-y
+                                     focus:outline-none focus:ring-1 focus:ring-escreviaPrimary
+                                     focus:border-transparent"
+                              placeholder="Escreva sua redação aqui..."
+                              required>{{ old('content', $essay->content ?? '') }}</textarea> {{-- Preenche com o valor da redação --}}
+                </div>
+
+                <div class="flex justify-end gap-4 mt-4">
+                     <button type="submit"
+                            name="action"
+                            value="draft"
+                            class="inline-flex items-center px-6 py-3 bg-gray-200 border border-transparent rounded-md font-semibold text-base text-gray-700 uppercase tracking-widest hover:bg-gray-300 focus:bg-gray-300 active:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-200">
+                        Salvar Rascunho
+                    </button>
+
+                    {{-- Botão Enviar Redação --}}
+                    <button type="submit"
+                            name="action"
+                            value="submit"
+                            class="inline-flex items-center px-6 py-3 bg-escreviaPrimary border border-transparent rounded-md font-semibold text-base text-white uppercase tracking-widest hover:bg-escreviaPrimary focus:bg-gray-300 active:bg-escreviaAccent focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-200">
+                        Enviar Redação para Análise
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Script para Salvamento Automático --}}
+    @push('scripts')
+        <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
+        <script>
+            let editor; // CKEditor instance
+            let autoSaveInterval;
+            let lastSavedContent = ''; // Para evitar salvar se o conteúdo não mudou
+
+            // Função para obter ou criar o input hidden para o essay_id
+            function getOrCreateEssayIdInput() {
+                let essayIdInput = document.getElementById('essay_id');
+                if (!essayIdInput) {
+                    essayIdInput = document.createElement('input');
+                    essayIdInput.type = 'hidden';
+                    essayIdInput.name = 'essay_id';
+                    essayIdInput.id = 'essay_id';
+                    // Adiciona o input ao formulário principal
+                    document.getElementById('essayForm').appendChild(essayIdInput);
+                }
+                return essayIdInput;
+            }
+
+            ClassicEditor
+                .create(document.querySelector('#editor'),{
+                    toolbar: [],
+                })
+                .then(newEditor => {
+                    editor = newEditor;
+                    // Inicializa lastSavedContent com o conteúdo atual do editor
+                    lastSavedContent = editor.getData();
+
+                    // Inicia o auto-save somente depois que o editor estiver pronto
+                    autoSaveInterval = setInterval(saveDraft, 5000); // Salva a cada 5 segundos
+                })
+                .catch(error => {
+                    console.error(error);
                 });
+
+            // Função para salvar rascunho
+            function saveDraft() {
+                const currentContent = editor.getData();
+                const title = document.getElementById('title').value;
+                const theme = document.getElementById('theme').value;
+
+                // Se nenhum dos campos principais está preenchido, não faz sentido salvar
+                if (!title.trim() && !theme.trim() && !currentContent.trim()) {
+                    console.log('Todos os campos vazios, pulando auto-save.');
+                    return;
+                }
+
+                // Verifica se houve mudança significativa para justificar o auto-save
+                // Obtemos o essayIdInput aqui para ter certeza que ele existe (ou será criado)
+                const essayIdInput = getOrCreateEssayIdInput();
+
+                // Verifica se o conteúdo, título ou tema mudou desde o último salvamento
+                const currentEssayId = essayIdInput.value;
+                const initialTitle = essayIdInput.dataset.initialTitle || '';
+                const initialTheme = essayIdInput.dataset.initialTheme || '';
+
+                if (currentContent === lastSavedContent &&
+                    title === initialTitle &&
+                    theme === initialTheme) {
+                    console.log('Conteúdo, título e tema não alterados, pulando auto-save.');
+                    return;
+                }
+
+                // Validação básica antes de enviar
+                if (!title.trim() || !theme.trim() || !currentContent.trim()) {
+                    console.warn('Campos obrigatórios (título, tema, conteúdo) ausentes para auto-salvamento. Pulando.');
+                    // Você pode adicionar um feedback visual aqui, se desejar
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('theme', theme);
+                formData.append('content', currentContent);
+                formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+
+                // Se o essay_id já existe (ou foi recém-criado/inserido), anexa-o
+                if (currentEssayId) {
+                    formData.append('essay_id', currentEssayId);
+                }
+
+                fetch('{{ route('essay.auto-save') }}', { // Usa a rota nomeada
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => { throw err; });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            console.log('Rascunho salvo com sucesso!');
+                            // IMPORTANTE: Se um novo ID foi retornado e o campo está vazio, atualiza
+                            if (data.essay_id && essayIdInput.value !== data.essay_id) {
+                                essayIdInput.value = data.essay_id; // Define o novo ID
+                                console.log('ID da redação atualizado para:', data.essay_id);
+                                // Opcional: Atualizar a URL no navegador para refletir o ID da redação
+                                // Isso é útil se o usuário quiser copiar a URL de um rascunho
+                                // window.history.replaceState(null, null, `/essay/${data.essay_id}/edit`);
+                            }
+                            lastSavedContent = currentContent; // Atualiza o último conteúdo salvo
+                            // Atualiza os atributos de dados para o título e tema iniciais após salvar
+                            essayIdInput.dataset.initialTitle = title;
+                            essayIdInput.dataset.initialTheme = theme;
+
+                        } else {
+                            console.error('Erro ao salvar rascunho automaticamente:', data.message || 'Erro desconhecido.');
+                            // Adicione feedback visual para o usuário aqui, se desejar
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro na requisição de auto-salvamento:', error);
+                        if (error.message) {
+                            console.error('Detalhes do erro:', error.message);
+                        }
+                        // Adicione feedback visual de erro para o usuário
+                    });
+            }
+
+            // Limpa o intervalo ao sair da página (boa prática)
+            window.addEventListener('beforeunload', () => {
+                clearInterval(autoSaveInterval);
+            });
+
+            // Adiciona os atributos de dados para o estado inicial do título e tema
+            // Isso é útil para a primeira verificação de "conteúdo não alterado" quando a página carrega
+            document.addEventListener('DOMContentLoaded', () => {
+                const initialTitle = document.getElementById('title').value;
+                const initialTheme = document.getElementById('theme').value;
+                const essayIdInput = getOrCreateEssayIdInput(); // Garante que o input exista
+                essayIdInput.dataset.initialTitle = initialTitle;
+                essayIdInput.dataset.initialTheme = initialTheme;
+
+                // Se houver um ID inicial (editando um rascunho), define lastSavedContent com o conteúdo atual
+                if (essayIdInput.value) {
+                    lastSavedContent = editor ? editor.getData() : ''; // CKEditor pode não estar pronto ainda
+                }
+            });
+
+            // Adicionar um listener para o evento 'submit' do formulário
+            // Para evitar que o auto-save dispare junto com o submit normal
+            document.getElementById('essayForm').addEventListener('submit', function() {
+                clearInterval(autoSaveInterval); // Garante que nenhum auto-save pendente seja disparado
             });
         </script>
     @endpush

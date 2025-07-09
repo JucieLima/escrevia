@@ -10,7 +10,7 @@ module.exports = {
     theme: {
         extend: {
             fontFamily: {
-                handwritten: ['"Patrick Hand"', ...defaultTheme.fontFamily.sans],
+                'playwrite-vn': ['"Playwrite Viet Nam Guides"', 'cursive', 'sans-serif'],
             },
             colors: {
                 escreviaPrimary: '#E94E77',    // Rosa vibrante

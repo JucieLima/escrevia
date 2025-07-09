@@ -19,6 +19,7 @@ class Essay extends Model
     protected $fillable = [
         'user_id',
         'title',
+        'theme',
         'content',
         'overall_score',
         'status',
