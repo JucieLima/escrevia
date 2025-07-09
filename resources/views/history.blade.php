@@ -151,9 +151,9 @@
                                     </td>
                                     <td class="table-00a6e313-13b0-4aaf-82f6-a32f4d8dbe19-column-600 h-[72px] px-4 py-2 w-60 text-[#6a7681] text-sm font-bold leading-normal tracking-[0.015em]">
                                         @if ($essay->status === 'corrected')
-                                            <a href="{{ route('essay-feedback', $essay->id) }}" title="Ver feedback" class="text-escreviaPrimary hover:text-escreviaAccent">Ver Feedback</a>
+                                            <a href="{{ route('essay.feedback', $essay->id) }}" title="Ver feedback" class="text-escreviaPrimary hover:text-escreviaAccent">Ver Feedback</a>
                                         @elseif ($essay->status === 'draft')
-                                            <a href="{{ route('submit-essay', ['essay_id' => $essay->id]) }}" title="Continuar editando" class="text-blue-600 hover:text-blue-800">Editar</a>
+                                            <a href="{{ route('essay.edit', $essay->id) }}" title="Continuar editando" class="text-blue-600 hover:text-blue-800">Editar</a>
                                             {{-- Se você tiver uma rota específica para edição de rascunhos, use-a.
                                             Aqui estou passando o ID para a rota de envio, assumindo que ela pode lidar com edição. --}}
                                         @else

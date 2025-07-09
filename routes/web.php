@@ -23,7 +23,7 @@ Route::middleware(['auth'])->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
-    Route::get('/redacoes/{essay}/feedback', [EssayController::class, 'showFeedback'])->name('essay-feedback');
+    Route::get('/redacoes/{essay}/feedback', [EssayController::class, 'showFeedback'])->name('essay.feedback');
 
     Route::get('/redacoes/historico', [EssayController::class, 'index'])->name('history');
 

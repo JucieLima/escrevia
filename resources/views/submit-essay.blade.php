@@ -123,7 +123,7 @@
 
             ClassicEditor
                 .create(document.querySelector('#editor'),{
-                    toolbar: [],
+
                 })
                 .then(newEditor => {
                     editor = newEditor;

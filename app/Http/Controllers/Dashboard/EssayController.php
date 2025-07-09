@@ -121,7 +121,7 @@ class EssayController extends Controller
 
             if ($this->analyzeEssayWithIA($essay)) {
                 // analyzeEssayWithIA já atualiza o status para 'corrected' se for bem-sucedido
-                return redirect()->route('essay.showFeedback', $essay->id)->with('success', 'Redação enviada para análise e corrigida com sucesso!');
+                return redirect()->route('essay.feedback', $essay->id)->with('success', 'Redação enviada para análise e corrigida com sucesso!');
             } else {
                 // Se a análise falhar, atualiza o status de volta
                 $essay->status = 'analysis_failed';
