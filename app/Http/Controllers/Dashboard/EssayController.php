@@ -165,9 +165,16 @@ class EssayController extends Controller
 
         try {
             // O prompt atualizado com as tags
-            $prompt = "Você é um professor especialista em correção de redações do ENEM, com amplo conhecimento nas competências avaliadas pelo INEP. Sua tarefa é analisar a redação abaixo, atribuir notas de 0 a 200 para cada uma das 5 competências e fornecer um feedback detalhado, apontando pontos fortes, áreas de melhoria e sugestões claras para evolução.
+            $prompt = "Você é um professor especialista em correção de redações do ENEM, com amplo conhecimento nas
+            competências avaliadas pelo INEP. Sua tarefa é analisar a redação abaixo seguindo rigorosamente as
+            diretrizes oficiais, com tolerância apenas para desvios que não comprometam a compreensão textual, conforme
+            os manuais de correção. Quando não houver  erros graves ou quando forem aceitáveis pelos critérios,
+            ofereça dicas de aprimoramento em vez de descontar pontos. Além disso, você deve fornecer um feedback
+            detalhado, apontando pontos fortes, áreas de melhoria e sugestões claras para evolução.
 
             **O tema da redação é: " . $essay->theme . "**
+
+            **Instruções específicas:**
 
             As competências a serem avaliadas são:
             C1: Domínio da norma culta
@@ -176,8 +183,9 @@ class EssayController extends Controller
             C4: Coesão
             C5: Proposta de intervenção
 
-            **Instruções de Formatação da Resposta:**
-            Siga exatamente este formato para a sua resposta. Use as tags delimitadoras para cada seção.
+            1. **Siga a tabela de níveis (0-200) por competência** do INEP, considerando:
+
+            2. **Priorize feedback construtivo**:
 
             <NOTAS_COMPETENCIAS>
             C1: [nota_numerica] - [Justificativa breve da C1]
@@ -222,7 +230,7 @@ class EssayController extends Controller
                         ['role' => 'user', 'content' => $prompt]
                     ],
                     'max_tokens' => 1500,
-                    'temperature' => 0.7,
+                    'temperature' => 0.0,
                 ]);
 
             if ($response->successful()) {

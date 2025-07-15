@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\MilenaChatbotController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Dashboard\EssayController;
 
@@ -44,6 +45,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/configuracoes', function () {
         return view('settings');
     })->name('settings');
+
+    // Rota para a página de chat da Milena (se for uma página dedicada)
+    Route::get('/chat-milena', function () {
+        return Inertia::render('Chat'); // Assumindo que você criou 'resources/js/Pages/Chat.vue'
+    })->name('chat.milena');
+
+    // Rotas da API da Milena (podem ser /api/milena/ ou apenas /milena/ se for tudo session-based)
+    // Se for um projeto Inertia/Blade, use o middleware 'web' ou apenas 'auth'
+    Route::get('/milena/start-chat', [MilenaChatbotController::class, 'startChat'])->name('milena.start');
+    Route::post('/milena/message', [MilenaChatbotController::class, 'sendMessage'])->name('milena.send');
 });
 
 Route::middleware(['auth', 'role:admin'])->group(function () {

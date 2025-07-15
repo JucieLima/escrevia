@@ -76,7 +76,7 @@
                                      focus:outline-none focus:ring-1 focus:ring-escreviaPrimary
                                      focus:border-transparent"
                               placeholder="Escreva sua redação aqui..."
-                              required>{{ old('content', $essay->content ?? '') }}</textarea> {{-- Preenche com o valor da redação --}}
+                              >{{ old('content', $essay->content ?? '') }}</textarea> {{-- Preenche com o valor da redação --}}
                 </div>
 
                 <div class="flex justify-end gap-4 mt-4">
