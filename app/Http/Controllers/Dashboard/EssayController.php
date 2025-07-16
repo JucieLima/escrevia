@@ -1,21 +1,18 @@
 <?php
 
 namespace App\Http\Controllers\Dashboard;
+// Verifique seu namespace, pode ser apenas App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Essay;
-
-// Importe o modelo Essay
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
-// Para acessar o usuário logado
-use Illuminate\View\View;
-
+// Não usado no código fornecido, pode remover se não for usar
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-
+use Inertia\Inertia;
 use Parsedown;
 
 class EssayController extends Controller
@@ -23,88 +20,99 @@ class EssayController extends Controller
     /**
      * Exibe uma lista das redações do usuário logado.
      *
-     * @return View
+     * @return \Inertia\Response
      */
-    public function index(): View
+    public function index(): \Inertia\Response
     {
-        // Pega o ID do usuário logado
         $userId = Auth::id();
 
-        // Busca todas as redações que pertencem ao usuário logado
-        // Ordena pelas mais recentes primeiro
         $essays = Essay::where('user_id', $userId)
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            // Para garantir que o Inertia possa serializar a coleção
+            // ou você pode transformar no frontend
+            ->through(fn($essay) => [
+                'id' => $essay->id,
+                'title' => $essay->title,
+                'theme' => $essay->theme,
+                'status' => $essay->status,
+                'overall_score' => $essay->overall_score,
+                'created_at' => $essay->created_at->format('d/m/Y H:i'),
+                // Adicione outros campos que você precisa exibir no `History.vue`
+            ]);
 
-        // Retorna a view 'history' (ou 'essays.index', dependendo de como você nomeou)
-        // e passa a coleção de redações para ela
-        return view('history', compact('essays'));
+        return Inertia::render('History', [
+            'essays' => $essays,
+            'flash' => session()->only(['success', 'error']), // Passa flash messages
+        ]);
     }
 
-
     /**
-     * Exibe a página de feedback para uma redação específica.
+     * Exibe o formulário de criação ou edição de redação.
+     * Unifica os antigos métodos `create` e `edit`.
      *
-     * @param \App\Models\Essay $essay
-     * @return \Illuminate\View\View
+     * @param \App\Models\Essay|null $essay
+     * @return \Inertia\Response
      */
-    public function showFeedback(Essay $essay)
+    public function createEdit(Essay $essay = null): \Inertia\Response
     {
-        // 1. Verificar se a redação pertence ao usuário logado (segurança)
-        if ($essay->user_id !== Auth::id()) {
+        // Se uma redação foi passada (para edição), verifique se pertence ao usuário logado
+        if ($essay && $essay->user_id !== Auth::id()) {
             abort(403, 'Acesso não autorizado a esta redação.');
         }
 
-        // 2. Carregar os relacionamentos necessários
-        // Usamos with() para eager load e evitar o problema N+1 queries
-        $essay->load(['competencyFeedbacks', 'interventions']);
-
-        // 3. Passar a redação e seus feedbacks para a view
-        return view('essay-feedback', compact('essay'));
+        return Inertia::render('SubmitEssay', [
+            // Passa o objeto essay (ou null se for uma nova redação) para a página Vue
+            'essay' => $essay ? $essay->toArray() : null,
+            // Passa erros de validação (se houver redirecionamento com erros)
+            'errors' => session('errors') ? session('errors')->getBag('default')->toArray() : [],
+            // Passa mensagens flash
+            'flash' => [
+                'success' => session('success'),
+                'error' => session('error'),
+                'essay_id' => session('essay_id'), // Para auto-save retornar ID de nova redação
+            ],
+        ]);
     }
 
     /**
      * Store or update an essay, either as a draft or for analysis.
-     * Agora unifica a lógica de criação e atualização para o formulário.
+     * Unifica a lógica de criação e atualização para o formulário.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Inertia\Response|\Symfony\Component\HttpFoundation\Response
      */
     public function store(Request $request)
     {
         $action = $request->input('action'); // 'draft' or 'submit'
 
-        // Regras de validação
         $rules = [
-            'essay_id' => 'nullable|exists:essays,id', // Opcional, para identificar rascunhos existentes
+            'essay_id' => 'nullable|exists:essays,id,user_id,' . Auth::id(), // Garante que o ID existe E pertence ao user logado
             'title' => 'required|string|max:255',
             'theme' => 'required|string|max:255',
             'content' => 'required|string',
         ];
 
-        // Se for submissão final, o conteúdo precisa ser mais substancial
         if ($action === 'submit') {
-            $rules['content'] .= '|min:100'; // Exemplo: mínimo de 100 caracteres para análise
+            $rules['content'] .= '|min:100'; // Mínimo de 100 caracteres para análise
         }
 
         $validated = $request->validate($rules);
 
         $user = Auth::user();
+        $essay = null;
 
         // Encontrar a redação existente ou criar uma nova
         if (isset($validated['essay_id']) && $validated['essay_id']) {
-            // Tentamos encontrar a redação que pertence ao usuário logado
             $essay = $user->essays()->where('id', $validated['essay_id'])->first();
-
             if (!$essay) {
-                // Se a redação não for encontrada ou não pertencer ao usuário, aborta.
-                // Isso é uma medida de segurança.
                 abort(403, 'Redação não encontrada ou você não tem permissão para editá-la.');
             }
         } else {
-            // Se não houver essay_id, é uma nova redação
             $essay = new Essay();
             $essay->user_id = $user->id;
         }
 
-        // Atualiza os dados da redação com os valores validados
         $essay->title = $validated['title'];
         $essay->theme = $validated['theme'];
         $essay->content = $validated['content'];
@@ -112,35 +120,112 @@ class EssayController extends Controller
         if ($action === 'draft') {
             $essay->status = 'draft';
             $essay->save();
-            // Após salvar/atualizar o rascunho, redirecionamos para a rota de edição
-            // para que o auto-save continue funcionando.
-            return redirect()->route('essay.edit', $essay->id)->with('success', 'Rascunho salvo com sucesso!');
+
+            // Retorna Inertia::render para permanecer na mesma página, atualizando as props
+            return Inertia::render('SubmitEssay', [
+                'essay' => $essay->toArray(),
+                'flash' => [
+                    'success' => 'Rascunho salvo com sucesso!',
+                    'essay_id' => $essay->id, // Essencial para o auto-save de novas redações
+                ],
+                'errors' => [], // Limpa erros de validação anteriores
+            ]);
         } else { // action is 'submit'
-            $essay->status = 'pending_analysis'; // Define status para indicar processamento
-            $essay->save(); // Salva a atualização antes de enviar para a IA
+            $essay->status = 'pending_correction'; // Mudei para 'pending_correction' para consistência
+            $essay->save(); // Salva antes de enviar para a IA
 
             if ($this->analyzeEssayWithIA($essay)) {
-                // analyzeEssayWithIA já atualiza o status para 'corrected' se for bem-sucedido
-                return redirect()->route('essay.feedback', $essay->id)->with('success', 'Redação enviada para análise e corrigida com sucesso!');
+                // CORREÇÃO AQUI: Usar session()->flash() e Inertia::location()
+                session()->flash('success', 'Redação enviada para análise e corrigida com sucesso!');
+                return Inertia::location(route('essay.feedback', $essay->id));
             } else {
-                // Se a análise falhar, atualiza o status de volta
                 $essay->status = 'analysis_failed';
                 $essay->save();
-                return redirect()->back()->with('error', 'Houve um erro ao analisar sua redação. Por favor, tente novamente mais tarde.');
+                session()->flash('error', 'Houve um erro ao analisar sua redação. Por favor, tente novamente mais tarde.');
+                return Inertia::location(route('submit-essay', $essay->id));
             }
         }
     }
 
-    public function create()
+    /**
+     * Handles AJAX auto-saving of essay drafts.
+     * Renomeado de autoSaveDraft para autoSave para consistência com o que o Vue espera.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse|\Inertia\Response
+     */
+    public function autoSave(Request $request) // Renomeado
     {
-        return view('submit-essay');
+        $validated = $request->validate([
+            'essay_id' => 'nullable|exists:essays,id,user_id,' . Auth::id(), // Garante que o ID existe E pertence ao user logado
+            'title' => 'required|string|max:255',
+            'theme' => 'required|string|max:255',
+            'content' => 'required|string',
+        ]);
+
+        $user = Auth::user();
+        $essay = null;
+
+        if (isset($validated['essay_id']) && $validated['essay_id']) {
+            $essay = $user->essays()->where('id', $validated['essay_id'])->first();
+            if (!$essay) {
+                return response()->json(['success' => false, 'message' => 'Rascunho não encontrado ou você não tem permissão para editá-lo.'], 403);
+            }
+        } else {
+            $essay = new Essay();
+            $essay->user_id = $user->id;
+        }
+
+        $essay->title = $validated['title'];
+        $essay->theme = $validated['theme'];
+        $essay->content = $validated['content'];
+        $essay->status = 'draft';
+        $essay->save();
+
+        return Inertia::render('SubmitEssay', [
+            'essay' => $essay->toArray(), // Passa a redação atualizada
+            'flash' => [
+                'success' => 'Rascunho salvo!',
+                'essay_id' => $essay->id, // Essencial para o frontend pegar o ID de um novo rascunho
+            ],
+            // É importante passar os erros vazios para limpar qualquer erro anterior
+            'errors' => session('errors') ? session('errors')->getBag('default')->toArray() : [],
+        ]);
     }
 
     /**
-     * Envia a redação para análise de IA e atualiza o modelo Essay.
-     * @param Essay $essay
-     * @return bool Retorna true se a análise for bem-sucedida, false caso contrário.
+     * Exibe a página de feedback para uma redação específica.
+     *
+     * @param \App\Models\Essay $essay
+     * @return \Inertia\Response
      */
+    public function showFeedback(Essay $essay): \Inertia\Response
+    {
+        if ($essay->user_id !== Auth::id()) {
+            abort(403, 'Acesso não autorizado a esta redação.');
+        }
+
+        $essay->load(['competencyFeedbacks', 'interventions']);
+
+        // Converte o feedback para HTML usando Parsedown, se não estiver já no banco
+        // Assumo que $essay->ia_feedback já é HTML se foi gerado e salvo por analyzeEssayWithIA
+        $parsedown = new Parsedown();
+        if ($essay->ia_feedback && !Str::startsWith(trim($essay->ia_feedback), '<')) { // Verifica se parece HTML
+            $essay->ia_feedback = $parsedown->text($essay->ia_feedback);
+        }
+
+        foreach ($essay->competencyFeedbacks as $feedback) {
+            if ($feedback->feedback_text && !Str::startsWith(trim($feedback->feedback_text), '<')) {
+                $feedback->feedback_text = $parsedown->text($feedback->feedback_text);
+            }
+        }
+
+        return Inertia::render('EssayFeedback', [ // Assumindo que você criará EssayFeedback.vue
+            'essay' => $essay->toArray(),
+            'flash' => session()->only(['success', 'error']),
+        ]);
+    }
+
     /**
      * Envia a redação para análise de IA e atualiza o modelo Essay.
      * @param Essay $essay
@@ -154,7 +239,6 @@ class EssayController extends Controller
             return false;
         }
 
-        // Mapeamento dos nomes curtos para os nomes completos das competências
         $competencyNamesMap = [
             'C1' => 'Domínio da norma culta',
             'C2' => 'Compreensão do tema',
@@ -164,7 +248,6 @@ class EssayController extends Controller
         ];
 
         try {
-            // O prompt atualizado com as tags
             $prompt = "Você é um professor especialista em correção de redações do ENEM, com amplo conhecimento nas
             competências avaliadas pelo INEP. Sua tarefa é analisar a redação abaixo seguindo rigorosamente as
             diretrizes oficiais, com tolerância apenas para desvios que não comprometam a compreensão textual, conforme
@@ -223,7 +306,7 @@ class EssayController extends Controller
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
             ])
-                ->withOptions(['verify' => 'C:\wamp64\bin\php\php8.3.14\extras\ssl\cacert.pem'])
+                ->withOptions(['verify' => 'C:\\wamp64\\bin\\php\\php8.3.14\\extras\\ssl\\cacert.pem']) // Cuidado com caminhos fixos!
                 ->timeout(90)->post('https://api.openai.com/v1/chat/completions', [
                     'model' => 'gpt-3.5-turbo',
                     'messages' => [
@@ -242,12 +325,8 @@ class EssayController extends Controller
                     return false;
                 }
 
-                // Crie uma instância do Parsedown
                 $parsedown = new Parsedown();
 
-                // --- Parsing da Resposta da IA ---
-
-                // 1. Extrair Pontuação Total
                 $overallScore = null;
                 if (preg_match('/<PONTUACAO_TOTAL>\s*Pontuação Total:\s*(\d+)\s*<\/PONTUACAO_TOTAL>/s', $analysisText, $matches)) {
                     $overallScore = (int)$matches[1];
@@ -255,7 +334,6 @@ class EssayController extends Controller
                     Log::warning('Não foi possível extrair a Pontuação Total da resposta da IA para a redação ID: ' . $essay->id);
                 }
 
-                // 2. Extrair Notas das Competências e Justificativas
                 $notesSection = null;
                 if (preg_match('/<NOTAS_COMPETENCIAS>(.*?)<\/NOTAS_COMPETENCIAS>/s', $analysisText, $matches)) {
                     $notesSection = trim($matches[1]);
@@ -264,45 +342,36 @@ class EssayController extends Controller
                 }
 
                 if ($notesSection) {
-                    // Limpa feedbacks de competências anteriores se houver (útil em retries)
                     $essay->competencyFeedbacks()->delete();
 
                     preg_match_all('/(C\d+):\s*(\d+)\s*-\s*(.*)/m', $notesSection, $matches, PREG_SET_ORDER);
                     foreach ($matches as $match) {
-                        $competencyShortName = trim($match[1]); // Ex: "C1"
+                        $competencyShortName = trim($match[1]);
                         $score = (int)$match[2];
                         $feedbackText = trim($match[3]);
 
-                        // Converte o feedback individual da competência de Markdown para HTML
                         $feedbackTextHtml = $parsedown->text($feedbackText);
 
-                        // Mapeia o nome curto para o nome completo
                         $competencyFullName = $competencyNamesMap[$competencyShortName] ?? $competencyShortName;
 
-                        // Cria um novo registro CompetencyFeedback
                         $essay->competencyFeedbacks()->create([
-                            'competency_name' => $competencyFullName, // Usando o nome completo
+                            'competency_name' => $competencyFullName,
                             'score' => $score,
-                            'feedback_text' => $feedbackTextHtml, // Salva o HTML
+                            'feedback_text' => $feedbackTextHtml,
                         ]);
                     }
                 }
 
-                // 3. Extrair Feedback Detalhado
                 $detailedFeedback = null;
                 if (preg_match('/<FEEDBACK_DETALHADO>(.*?)<\/FEEDBACK_DETALHADO>/s', $analysisText, $matches)) {
                     $detailedFeedback = trim($matches[1]);
-                    // Converte o feedback detalhado de Markdown para HTML
                     $detailedFeedbackHtml = $parsedown->text($detailedFeedback);
                 } else {
                     Log::warning('Não foi possível extrair a seção FEEDBACK_DETALHADO da resposta da IA para a redação ID: ' . $essay->id);
                 }
 
-                // --- Fim do Parsing ---
-
-                // Atualizar os campos da redação principal
                 $essay->overall_score = $overallScore;
-                $essay->ia_feedback = $detailedFeedbackHtml ?? null; // Armazena o feedback detalhado completo, já em HTML
+                $essay->ia_feedback = $detailedFeedbackHtml ?? null;
                 $essay->analyzed_at = now();
                 $essay->status = 'corrected';
                 $essay->save();
@@ -319,57 +388,5 @@ class EssayController extends Controller
             Log::error('Exceção ao comunicar com a API da OpenAI: ' . $e->getMessage() . ' | Linha: ' . $e->getLine() . ' | Arquivo: ' . $e->getFile());
             return false;
         }
-    }
-
-    /**
-     * Display the specified essay for editing (drafts).
-     * Você precisará criar esta view resources/views/edit-essay.blade.php
-     * ou adaptar submit-essay.blade.php para ser um template para ambos.
-     */
-    public function edit(Essay $essay)
-    {
-        // Certifique-se que o usuário tem permissão para editar esta redação
-        if ($essay->user_id !== Auth::id()) {
-            abort(403);
-        }
-
-        return view('submit-essay', compact('essay')); // Ou 'submit-essay' se for um template único
-    }
-
-    /**
-     * Handles AJAX auto-saving of essay drafts.
-     */
-    public function autoSaveDraft(Request $request)
-    {
-        $validated = $request->validate([
-            'essay_id' => 'nullable|exists:essays,id', // Pode ser nulo para novos rascunhos
-            'title' => 'required|string|max:255',
-            'theme' => 'required|string|max:255',
-            'content' => 'required|string',
-        ]);
-
-        $user = Auth::user();
-
-        // Encontrar a redação existente ou criar uma nova
-        if (isset($validated['essay_id']) && $validated['essay_id']) {
-            $essay = $user->essays()->where('id', $validated['essay_id'])->first();
-            if (!$essay) {
-                // Segurança: se o ID foi enviado mas não pertence ao usuário
-                return response()->json(['success' => false, 'message' => 'Rascunho não encontrado ou você não tem permissão para editá-lo.'], 403);
-            }
-        } else {
-            // É um novo rascunho, crie uma nova instância
-            $essay = new Essay();
-            $essay->user_id = $user->id;
-        }
-
-        $essay->title = $validated['title'];
-        $essay->theme = $validated['theme'];
-        $essay->content = $validated['content'];
-        $essay->status = 'draft'; // Sempre 'draft' para auto-save
-        $essay->save();
-
-        // Retorna o ID da redação (novo ou existente) para o frontend
-        return response()->json(['success' => true, 'message' => 'Rascunho salvo!', 'essay_id' => $essay->id]);
     }
 }

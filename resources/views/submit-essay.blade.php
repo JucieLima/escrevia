@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('app')
 @section('title', 'Editar Redação Rascunho')
 @section('content')
     <div class="flex flex-1 justify-center py-5 px-0">
@@ -8,13 +8,15 @@
             </p>
 
             @if (session('success'))
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mx-4 mb-4" role="alert">
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mx-4 mb-4"
+                     role="alert">
                     <span class="block sm:inline">{{ session('success') }}</span>
                 </div>
             @endif
 
             @if ($errors->any())
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-4 mb-4" role="alert">
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mx-4 mb-4"
+                     role="alert">
                     <strong class="font-bold">Ops!</strong>
                     <span class="block sm:inline">Houve alguns problemas com sua submissão.</span>
                     <ul class="mt-3 list-disc list-inside">
@@ -37,7 +39,8 @@
 
                 {{-- Campo para o Título da Redação --}}
                 <div class="flex flex-col gap-2">
-                    <label for="title" class="text-[#111418] text-base font-medium leading-normal">Título da Redação:</label>
+                    <label for="title" class="text-[#111418] text-base font-medium leading-normal">Título da
+                        Redação:</label>
                     <input type="text"
                            id="title"
                            name="title"
@@ -52,7 +55,8 @@
 
                 {{-- Campo: Tema da Redação --}}
                 <div class="flex flex-col gap-2">
-                    <label for="theme" class="text-[#111418] text-base font-medium leading-normal">Tema da Redação:</label>
+                    <label for="theme" class="text-[#111418] text-base font-medium leading-normal">Tema da
+                        Redação:</label>
                     <input type="text"
                            id="theme"
                            name="theme"
@@ -67,7 +71,8 @@
 
                 {{-- Campo para o Conteúdo da Redação (Textarea) --}}
                 <div class="flex flex-col gap-2">
-                    <label for="content" class="text-[#111418] text-base font-medium leading-normal">Conteúdo da Redação:</label>
+                    <label for="content" class="text-[#111418] text-base font-medium leading-normal">Conteúdo da
+                        Redação:</label>
                     <textarea id="editor"
                               name="content"
                               rows="15"
@@ -76,11 +81,11 @@
                                      focus:outline-none focus:ring-1 focus:ring-escreviaPrimary
                                      focus:border-transparent"
                               placeholder="Escreva sua redação aqui..."
-                              >{{ old('content', $essay->content ?? '') }}</textarea> {{-- Preenche com o valor da redação --}}
+                    >{{ old('content', $essay->content ?? '') }}</textarea> {{-- Preenche com o valor da redação --}}
                 </div>
 
                 <div class="flex justify-end gap-4 mt-4">
-                     <button type="submit"
+                    <button type="submit"
                             name="action"
                             value="draft"
                             class="inline-flex items-center px-6 py-3 bg-gray-200 border border-transparent rounded-md font-semibold text-base text-gray-700 uppercase tracking-widest hover:bg-gray-300 focus:bg-gray-300 active:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-200">
@@ -122,9 +127,7 @@
             }
 
             ClassicEditor
-                .create(document.querySelector('#editor'),{
-
-                })
+                .create(document.querySelector('#editor'), {})
                 .then(newEditor => {
                     editor = newEditor;
                     // Inicializa lastSavedContent com o conteúdo atual do editor
@@ -192,7 +195,9 @@
                 })
                     .then(response => {
                         if (!response.ok) {
-                            return response.json().then(err => { throw err; });
+                            return response.json().then(err => {
+                                throw err;
+                            });
                         }
                         return response.json();
                     })
@@ -248,7 +253,7 @@
 
             // Adicionar um listener para o evento 'submit' do formulário
             // Para evitar que o auto-save dispare junto com o submit normal
-            document.getElementById('essayForm').addEventListener('submit', function() {
+            document.getElementById('essayForm').addEventListener('submit', function () {
                 clearInterval(autoSaveInterval); // Garante que nenhum auto-save pendente seja disparado
             });
         </script>

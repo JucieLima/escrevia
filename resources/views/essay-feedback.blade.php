@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('app')
 @section('title', 'Feedback da redação')
 @section('content')
     <div class="px-0 flex flex-1 justify-center py-5">
@@ -8,7 +8,8 @@
                     Feedback da redação
                 </p>
                 {{-- Adicione um botão para voltar à lista de redações --}}
-                <a href="{{ route('history') }}" class="inline-flex items-center px-4 py-2 bg-escreviaPrimary border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-escreviaPrimary focus:bg-gray-300 active:bg-escreviaAccent focus:outline-none focus:ring-2 focus->ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-200">
+                <a href="{{ route('history') }}"
+                   class="inline-flex items-center px-4 py-2 bg-escreviaPrimary border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-escreviaPrimary focus:bg-gray-300 active:bg-escreviaAccent focus:outline-none focus:ring-2 focus->ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-200">
                     Voltar para Minhas Redações
                 </a>
             </div>
@@ -88,7 +89,8 @@
                             }
                         @endphp
                         {{-- Aplicando a classe de background ao details --}}
-                        <details class="flex flex-col rounded-lg border border-[#dbe0e6] px-[15px] py-[7px] group {{ $competencyScoreBgColorClass }}">
+                        <details
+                                class="flex flex-col rounded-lg border border-[#dbe0e6] px-[15px] py-[7px] group {{ $competencyScoreBgColorClass }}">
                             <summary class="flex cursor-pointer items-center justify-between gap-6 py-2">
                                 <p class="text-[#111418] text-sm font-medium leading-normal">
                                     {{ $feedback->competency_name }}
@@ -98,7 +100,8 @@
                                     </span>
                                 </p>
                                 <div class="text-[#111418] group-open:rotate-180">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px"
+                                         fill="currentColor" viewBox="0 0 256 256">
                                         <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/>
                                     </svg>
                                 </div>

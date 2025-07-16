@@ -12,15 +12,6 @@
         <form method="POST" action="{{ route('register') }}">
             @csrf
 
-            <div class="mt-4">
-                <label for="role">Tipo de usuário</label>
-                <select name="role" id="role" class="block mt-1 w-full" required>
-                    <option value="student">Aluno</option>
-                    <option value="teacher">Professor</option>
-                    <option value="admin">Administrador</option>
-                </select>
-            </div>
-
             <!-- Name -->
             <div>
                 <x-label for="name" :value="__('Name')" />
